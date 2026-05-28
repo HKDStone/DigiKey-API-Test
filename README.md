@@ -32,9 +32,17 @@ CLIENT_SECRET=your_digikey_client_secret
 在專案資料夾中執行腳本：
 
 ```bash
-python main.py
+python main.py <keywords> [recordLimit]
 ```
 
+### 範例 1：只輸入必填關鍵字（最基礎用法）
+```bash
+python main.py "resistor 10k"
+```
+### 範例 2：指定只回傳 5 筆紀錄
+```bash
+python main.py "STM32F103" 5
+```
 此腳本將會：
 
 - 從 `.env` 載入 API 憑證
