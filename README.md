@@ -15,6 +15,10 @@
 ```bash
 pip install requests python-dotenv
 ```
+或是使用 [uv](https://docs.astral.sh/uv/#highlights)：
+```bash
+uv sync
+```
 
 2. 在相同資料夾中建立 `.env` 檔案，內容如下：
 
