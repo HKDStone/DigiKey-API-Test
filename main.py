@@ -36,7 +36,7 @@ def print_usage():
 
 def main():
 
-    print("All arguments:", sys.argv)
+    # print("All arguments:", sys.argv)
 
     args = sys.argv[1:]
     if len(args) < 1 or any(arg in ("--help", "-h") for arg in args):
@@ -76,8 +76,8 @@ def main():
 
     payload = {
         # "keywords": "YJP1608-R001",
-        "keywords": "STPS41H100CGY-TR",
-        "recordCount": 5
+        "keywords": keywords,
+        "recordCount": record_count
     }
 
     print("Searching DigiKey...")
