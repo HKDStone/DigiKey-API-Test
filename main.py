@@ -2,7 +2,7 @@ import requests, os, sys
 from dotenv import load_dotenv
 
 def get_childCategory(child, i=1):
-    print("Child Category ["+str(i)+"]: " + (child['Name'] or "None"))
+    print("\tChild Category ["+str(i)+"]: " + (child['Name'] or "None"))
     i += 1
     if ("ChildCategories" in child) and (len(child["ChildCategories"]) > 0):
         get_childCategory(child["ChildCategories"][0], i)
@@ -87,13 +87,15 @@ def main():
         print("Success!")
         # print("Json: " + str(response.json()))
         tmp = response.json()
-        products = tmp['Products'][0]
-        parameters = products['Parameters']
-        print("Category Name: " + products['Category']['Name'])
-        if ("ChildCategories" in products['Category']) and (len(products['Category']['ChildCategories']) > 0):
-            get_childCategory(products['Category']['ChildCategories'][0])
-        print("Package / Case: " + next((item for item in parameters if item['ParameterId'] == 16),{'ValueText': "None"})['ValueText'])
-        print("Supplier Device Package: " + next((item for item in parameters if item['ParameterId'] == 1291),{'ValueText': "None"})['ValueText'])
+        for index, products in enumerate(tmp['Products']):
+            print("Products ["+str(index)+"]: ")
+            parameters = products['Parameters']
+            print("\tManufacturerProductNumber: " + products['ManufacturerProductNumber'])
+            print("\tCategory Name: " + products['Category']['Name'])
+            if ("ChildCategories" in products['Category']) and (len(products['Category']['ChildCategories']) > 0):
+                get_childCategory(products['Category']['ChildCategories'][0])
+            print("\tPackage / Case: " + next((item for item in parameters if item['ParameterId'] == 16),{'ValueText': "None"})['ValueText'])
+            print("\tSupplier Device Package: " + next((item for item in parameters if item['ParameterId'] == 1291),{'ValueText': "None"})['ValueText'])
     else:
         print(f"Search Failed with status {response.status_code}:")
         print(response.text)
