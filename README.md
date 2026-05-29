@@ -4,7 +4,7 @@
 
 ## 系統需求
 
-- Python 3.7+
+- Python 3.12+
 - `requests`
 - `python-dotenv`
 - `prettytable`
