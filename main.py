@@ -34,12 +34,12 @@ def get_access_token(client_id, client_secret):
 
 def print_usage():
     print("Usage: python main.py <keywords> [recordLimit] [-o output]")
-    print("  <keywords>: 搜尋關鍵字，例如 STPS41H100CGY-TR")
-    print("  [recordLimit]: 可選，回傳的最大筆數，預設為 5")
+    print("  -k <keywords>: 搜尋關鍵字，例如 -k \"STPS41H100CGY-TR\"")
+    print("  [-l recordLimit]: 可選，回傳的最大筆數，預設為 5")
     print("  [-o output]: 可選，輸出結果為 JSON 檔案")
     print("Example:")
-    print("  python main.py STPS41H100CGY-TR 10")
-    print("  python main.py STPS41H100CGY-TR 10 -o results.json")
+    print("  python main.py -k \"STPS41H100CGY-TR\" -l 10")
+    print("  python main.py -k \"STPS41H100CGY-TR\" -l 10 -o results.json")
     print("請先建立 .env 檔並設定 CLIENT_ID 與 CLIENT_SECRET。\n")
 
 def main():
@@ -51,12 +51,31 @@ def main():
         print_usage()
         return
 
-    keywords = args[0]
+    keywords = None
     record_count = 5
     output_file = None
-    idx = 1
+    idx = 0
     while idx < len(args):
-        if args[idx] == "-o":
+        if args[idx] == "-k":
+            if idx + 1 >= len(args):
+                print("參數 -k 後沒有引數.")
+                print_usage()
+                return
+            keywords = args[idx + 1]
+            idx += 2
+        elif args[idx] == "-l":
+            if idx + 1 >= len(args):
+                print("參數 -l 後沒有引數.")
+                print_usage()
+                return
+            try:
+                record_count = int(args[idx + 1])
+            except ValueError:
+                print("recordLimit 必須是阿拉伯數字.")
+                print_usage()
+                return
+            idx += 2
+        elif args[idx] == "-o":
             if idx + 1 >= len(args):
                 print("參數 -o 後沒有引數.")
                 print_usage()
@@ -64,17 +83,14 @@ def main():
             output_file = args[idx + 1]
             idx += 2
         else:
-            if record_count != 5:
-                print(f"未知參數: {args[idx]}")
-                print_usage()
-                return
-            try:
-                record_count = int(args[idx])
-            except ValueError:
-                print("recordLimit 必須是阿拉伯數字.")
-                print_usage()
-                return
-            idx += 1
+            print(f"未知參數: {args[idx]}")
+            print_usage()
+            return
+
+    if not keywords:
+        print("必須指定搜尋關鍵字，請使用 -k <keywords>.")
+        print_usage()
+        return
 
     # 1. Load env file into
     load_dotenv()
@@ -111,7 +127,7 @@ def main():
         # print("Json: " + str(response.json()))
         tmp = response.json()
         table = PrettyTable()
-        table.field_names = ["ID","Name", "Category", "Child Categories","Supplier Device Package", "Package / Case"]
+        table.field_names = ["ID","Name", "Category", "Child Categories","Supplier Device Package", "Package/Case"]
         mainList = {}
         for index, products in enumerate(tmp['Products']):
             parameters = products['Parameters']
@@ -136,7 +152,7 @@ def main():
                     "Category":tmpList[2],
                     "Child Categories":tmpList[3],
                     "Supplier Device Package":tmpList[4],
-                    "Package / Case":tmpList[5]
+                    "Package/Case":tmpList[5]
                 })
             
 
