@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "python"
 version = "0.1.0"
@@ -9,9 +13,11 @@ dependencies = [
     "python-dotenv>=1.2.2",
     "requests>=2.34.2",
 ]
-exclude = [
-  "/.venv",
-  "/tests",
-  "/.github",
-  "*.pyc"
-]
+# 核心修正：已經將 `exclude` 從 [project] 區塊中移除
+
+# 正確修正：將原本想排除的目錄，利用 tool.setuptools 的規則來定義
+[tool.setuptools.packages.find]
+exclude = ["tests*", ".github*", ".venv*"]
+
+[tool.setuptools]
+include-package-data = true
