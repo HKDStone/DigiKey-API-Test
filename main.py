@@ -77,7 +77,7 @@ def main():
     payload = {
         # "keywords": "YJP1608-R001",
         "keywords": keywords,
-        "recordCount": record_count
+        "limit": record_count
     }
 
     print("Searching DigiKey...")
