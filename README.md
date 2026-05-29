@@ -7,7 +7,7 @@
 - Python 3.7+
 - `requests`
 - `python-dotenv`
- - `prettytable`
+- `prettytable`
 
 ## 設定
 
@@ -33,20 +33,20 @@ CLIENT_SECRET=your_digikey_client_secret
 在專案資料夾中執行腳本：
 
 ```bash
-python main.py <keywords> [recordLimit] [-o output]
+python main.py -k "<keywords>" [-l recordLimit] [-o output]
 ```
 
 ### 範例 1：只輸入必填關鍵字（最基礎用法）
 ```bash
-python main.py "resistor 10k"
+python main.py -k "resistor 10k"
 ```
 ### 範例 2：指定只回傳 5 筆紀錄
 ```bash
-python main.py "STM32F103" 5
+python main.py -k "STM32F103" -l 5
 ```
 ### 範例 3：輸出為 JSON 檔案
 ```bash
-python main.py "STM32F103" 5 -o results.json
+python main.py -k "STM32F103" -l 5 -o results.json
 ```
 此腳本將會：
 
@@ -62,5 +62,5 @@ python main.py "STM32F103" 5 -o results.json
 
 ## 注意事項
 
-- 目前的搜尋關鍵字可透過命令列參數傳入。
+- 目前的搜尋關鍵字可透過 -k 參數傳入。
 - 腳本會根據設定的 URL 使用 DigiKey 沙盒或正式環境端點。
