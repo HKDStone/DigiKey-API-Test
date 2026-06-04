@@ -119,13 +119,17 @@ def main():
         "limit": record_count
     }
 
-    print("Searching DigiKey...")
+    print(f"Searching \"{keywords}\" on DigiKey...")
     response = requests.post(url, json=payload, headers=headers)
     
     if response.status_code == 200:
-        print("Success!")
         # print("Json: " + str(response.json()))
         tmp = response.json()
+        count = int(tmp['ProductsCount'])
+        if(count == 0):
+            print(f"No result(s) found for \"{keywords}\" on DigiKey.")
+            return
+        print(f"Found {count} record" + ("s" if count > 1 else ""))
         table = PrettyTable()
         table.field_names = ["ID","Name", "Category", "Child Categories","Supplier Device Package", "Package/Case"]
         mainList = {}
