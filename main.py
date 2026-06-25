@@ -131,7 +131,7 @@ def main():
             return
         print(f"Found {count} record" + ("s" if count > 1 else ""))
         table = PrettyTable()
-        table.field_names = ["ID","Name", "Category", "Child Categories","Supplier Device Package", "Package/Case"]
+        table.field_names = ["ID","Name", "Category", "Child Categories","Package/Case", "Supplier Device Package"]
         mainList = {}
         for index, products in enumerate(tmp['Products']):
             parameters = products['Parameters']
