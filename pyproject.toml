@@ -11,6 +11,7 @@ requires-python = ">=3.12"
 dependencies = [
     "prettytable>=3.17.0",
     "python-dotenv>=1.2.2",
+    "rapidfuzz>=3.14.5",
     "requests>=2.34.2",
 ]
 # 核心修正：已經將 `exclude` 從 [project] 區塊中移除

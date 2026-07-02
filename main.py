@@ -1,7 +1,62 @@
-import requests, os, sys, json
+import requests, os, sys, json, re
 from dotenv import load_dotenv
 from prettytable import PrettyTable
 
+def clean_part_number(user_input: str) -> str:
+    """
+    清理雜訊
+    轉大寫、去前後空格，並移除非英數、連字號(-)、斜線(/)的字元（如空格、底線、特殊符號）。
+    """
+    if not user_input:
+        return ""
+    
+    # 1. 轉大寫並去掉前後空白
+    cleaned = user_input.upper().strip()
+    
+    # 2. 使用 Regex 移除非主要字元
+    # [^A-Z0-9\-\/] 代表「不是 A-Z、0-9、-、/」的字元通通取代為空字串
+    cleaned = re.sub(r'[^A-Z0-9\-\/]', '', cleaned)
+    
+    return cleaned
+
+def split_part_number(cleaned_input: str) -> tuple:
+    """
+    提取核心型號（為退階搜尋做準備）
+    使用 Regex 抓取前 5 到 8 碼作為核心型號，剩下的歸為後綴。
+    """
+    # 這裡的 Regex 意思是：
+    # ^([A-Z0-9\-]{5,8}) -> 匹配開頭 5 到 8 碼的英數或連字號（分組 1）
+    # (.*)$             -> 剩下的所有字元（分組 2）
+    match = re.match(r'^([A-Z0-9\-]{5,8})(.*)$', cleaned_input)
+    
+    if match:
+        core = match.group(1)
+        suffix = match.group(2)
+        return core, suffix
+    
+    return cleaned_input, ""
+
+def search_keyword(keywords, access_token, record_count):
+    if len(keywords) > 250:
+        print("Keywords length is out of limits")
+        exit()
+    url = "https://api.digikey.com/products/v4/search/keyword"
+    headers = {
+        "X-DIGIKEY-Client-Id": os.getenv("CLIENT_ID"),
+        "Authorization": f"Bearer {access_token}",  # <-- Added this crucial line!
+        "X-DIGIKEY-Locale-Site": "TW",               
+        "X-DIGIKEY-Locale-Currency": "USD",  
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        # "keywords": "YJP1608-R001",
+        "keywords": f"{keywords}",
+        "limit": record_count
+    }
+
+    print(f"Searching \"{keywords}\" on DigiKey...")
+    return requests.post(url, json=payload, headers=headers)
 
 def get_childCategory(child, array=None, i=1):
     if array is None:
@@ -102,33 +157,36 @@ def main():
     except Exception as e:
         print(e)
         return
+    
+    # 進 API 前先做 Regex 清理
+    cleaned_keywords = clean_part_number(keywords)
+    if cleaned_keywords != keywords:
+        print(f"原始輸入: \"{raw_keywords}\" -> Regex 優化後: \"{cleaned_keywords}\"")
 
     # 3. Build headers including BOTH the Client ID and the Bearer token
-    url = "https://api.digikey.com/products/v4/search/keyword"
-    headers = {
-        "X-DIGIKEY-Client-Id": os.getenv("CLIENT_ID"),
-        "Authorization": f"Bearer {access_token}",  # <-- Added this crucial line!
-        "X-DIGIKEY-Locale-Site": "TW",               
-        "X-DIGIKEY-Locale-Currency": "USD",  
-        "Content-Type": "application/json"
-    }
-
-    payload = {
-        # "keywords": "YJP1608-R001",
-        "keywords": keywords,
-        "limit": record_count
-    }
-
-    print(f"Searching \"{keywords}\" on DigiKey...")
-    response = requests.post(url, json=payload, headers=headers)
+    response  = search_keyword(cleaned_keywords, access_token, record_count)
     
     if response.status_code == 200:
-        # print("Json: " + str(response.json()))
         tmp = response.json()
         count = int(tmp['ProductsCount'])
-        if(count == 0):
-            print(f"No result(s) found for \"{keywords}\" on DigiKey.")
-            return
+        
+        # ─── 【核心修改：第二步，若精準搜尋為 0 筆，啟動 Regex 退階機制】 ───
+        if count == 0:
+            print(f"No result(s) found for \"{cleaned_keywords}\" on DigiKey.")
+            core, suffix = split_part_number(cleaned_keywords)
+            
+            # 如果有成功切出後綴，則用核心型號再試一次
+            if suffix:
+                print(f"啟動退階搜尋機制... 砍掉後綴 \"{suffix}\"，改用核心型號 \"{core}\" 重新搜尋...")
+                response = search_keyword(core, access_token, record_count)
+                tmp = response.json()
+                count = int(tmp['ProductsCount'])
+            
+            # 如果連核心搜尋都找不到，或者根本沒後綴可切，宣告失敗
+            if count == 0:
+                print(f"退階搜尋依然查無結果。")
+                print("Exit.")
+                return
         print(f"Found {count} record" + ("s" if count > 1 else ""))
         table = PrettyTable()
         table.field_names = ["ID","Name", "Category", "Child Categories","Package/Case", "Supplier Device Package"]
@@ -136,7 +194,7 @@ def main():
         for index, products in enumerate(tmp['Products']):
             parameters = products['Parameters']
             tmpList = []
-            tmpList.append(index) 
+            tmpList.append(index + 1) 
             # 品名
             tmpList.append(products['ManufacturerProductNumber'] or "None")
             # 類別
@@ -162,7 +220,6 @@ def main():
 
             table.add_row(tmpList)
         print(table)
-
         if output_file:
             output_dir = os.path.dirname(output_file)
             if output_dir:
