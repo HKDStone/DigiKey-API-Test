@@ -161,7 +161,7 @@ def main():
     # 進 API 前先做 Regex 清理
     cleaned_keywords = clean_part_number(keywords)
     if cleaned_keywords != keywords:
-        print(f"原始輸入: \"{raw_keywords}\" -> Regex 優化後: \"{cleaned_keywords}\"")
+        print(f"原始輸入: \"{keywords}\" -> Regex 優化後: \"{cleaned_keywords}\"")
 
     # 3. Build headers including BOTH the Client ID and the Bearer token
     response  = search_keyword(cleaned_keywords, access_token, record_count)
